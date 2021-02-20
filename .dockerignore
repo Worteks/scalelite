@@ -16,7 +16,7 @@ coverage/
 .rvmrc
 vendor/bundle
 .bundle
-Dockerfile
+Dockerfile*
 .gitlab-ci.yml
 .rubocop.yml
 .travis.yml
