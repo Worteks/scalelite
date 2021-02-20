@@ -1,0 +1,4 @@
+FROM application AS recording-importer
+ENV BUILD_NUMBER=v1.0.8
+ENV RECORDING_IMPORT_POLL=true
+CMD [ "bin/start-recording-importer" ]

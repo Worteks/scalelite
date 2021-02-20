@@ -1,0 +1,3 @@
+FROM application AS poller
+ENV BUILD_NUMBER=v1.0.8
+CMD [ "bin/start-poller" ]
