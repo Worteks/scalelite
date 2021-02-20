@@ -1,3 +1,7 @@
 #!/bin/sh
 
+test -z "$HOME" && export HOME=/srv/scalelite
+if ls /usr/local/share/ca-certificates/*.crt >/dev/null 2>&1; then
+    update-ca-certificates
+fi
 exec tini -- bundle exec rake recordings:watch["${RECORDING_IMPORT_POLL:-true}","${RECORDING_IMPORT_POLL_INTERVAL:-60}"]

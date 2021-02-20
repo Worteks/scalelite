@@ -31,6 +31,7 @@ CMD [ "/etc/nginx/start", "-g", "daemon off;" ]
 
 FROM alpine AS base
 RUN apk add --no-cache \
+    ca-certificates \
     libpq \
     libxml2 \
     libxslt \
@@ -41,7 +42,9 @@ RUN apk add --no-cache \
     tini \
     tzdata \
     && addgroup scalelite \
-    && adduser -h /srv/scalelite -G scalelite -D scalelite
+    && adduser -h /srv/scalelite -G scalelite -D scalelite \
+    && chmod -R g=u /etc/ssl
+
 WORKDIR /srv/scalelite
 
 FROM base as builder
@@ -60,7 +63,8 @@ RUN bundle config build.nokogiri --use-system-libraries \
     && rm -rf vendor/bundle/ruby/*/cache \
     && find vendor/bundle/ruby/*/gems/ \( -name '*.c' -o -name '*.o' \) -delete
 COPY --chown=scalelite:scalelite . ./
-RUN rm -rf nginx
+RUN rm -rf nginx \
+    && chmod -R g=u ./tmp
 
 FROM base AS application
 USER scalelite:scalelite
