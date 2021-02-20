@@ -66,8 +66,7 @@ RUN bundle config build.nokogiri --use-system-libraries \
 COPY --chown=scalelite:scalelite . ./
 RUN rm -rf nginx \
     && mkdir ./tmp \
-    && chmod -R g=u ./tmp \
-    && chown -R 1000:0 ./tmp
+    && chmod -R g=u ./tmp
 
 FROM base AS application
 USER scalelite:scalelite
