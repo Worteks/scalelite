@@ -43,7 +43,8 @@ RUN apk add --no-cache \
     tzdata \
     && addgroup scalelite \
     && adduser -h /srv/scalelite -G scalelite -D scalelite \
-    && chmod -R g=u /etc/ssl
+    && chmod -R g=u /etc/ssl \
+    && chown -R 1000:0 /etc/ssl
 
 WORKDIR /srv/scalelite
 
@@ -65,7 +66,8 @@ RUN bundle config build.nokogiri --use-system-libraries \
 COPY --chown=scalelite:scalelite . ./
 RUN rm -rf nginx \
     && mkdir ./tmp \
-    && chmod -R g=u ./tmp
+    && chmod -R g=u ./tmp \
+    && chown -R 1000:0 ./tmp
 
 FROM base AS application
 USER scalelite:scalelite
