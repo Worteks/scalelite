@@ -64,6 +64,7 @@ RUN bundle config build.nokogiri --use-system-libraries \
     && find vendor/bundle/ruby/*/gems/ \( -name '*.c' -o -name '*.o' \) -delete
 COPY --chown=scalelite:scalelite . ./
 RUN rm -rf nginx \
+    && mkdir ./tmp \
     && chmod -R g=u ./tmp
 
 FROM base AS application
