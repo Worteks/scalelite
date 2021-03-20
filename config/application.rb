@@ -85,5 +85,17 @@ module Scalelite
     config.x.recording_unpublish_dir = File.absolute_path(
       ENV.fetch('RECORDING_UNPUBLISH_DIR') { '/var/bigbluebutton/unpublished' }
     )
+
+    # Minimum user count of a meeting, used for calculating server load. Defaults to 15.
+    config.x.load_min_user_count = ENV.fetch('LOAD_MIN_USER_COUNT', 15).to_i
+
+    # The time(in minutes) until the `load_min_user_count` will be used for calculating server load
+    config.x.load_join_buffer_time = ENV.fetch('LOAD_JOIN_BUFFER_TIME', 15).to_i.minutes
+
+    # Whether to generate ids for servers based on the hostname rather than random UUIDs. Default to false.
+    config.x.server_id_is_hostname = ENV.fetch('SERVER_ID_IS_HOSTNAME', 'false').casecmp?('true')
+
+    # Recording feature will be disabled, if set to 'true'. Defaults to false.
+    config.x.recording_disabled = ENV.fetch('RECORDING_DISABLED', 'false').casecmp?('true')
   end
 end

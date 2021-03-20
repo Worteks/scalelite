@@ -111,7 +111,7 @@ class BigBlueButtonApiControllerTest < ActionDispatch::IntegrationTest
 
   test 'isMeetingRunning responds with the correct meeting status' do
     server1 = Server.create(url: 'https://test-1.example.com/bigbluebutton/api', secret: 'test-1-secret', load: 0)
-    meeting1 = Meeting.find_or_create_with_server('Demo Meeting', server1)
+    meeting1 = Meeting.find_or_create_with_server('Demo Meeting', server1, 'mp')
 
     stub_request(:get, encode_bbb_uri('isMeetingRunning', server1.url, server1.secret, 'meetingID' => meeting1.id))
       .to_return(body: '<response><returncode>SUCCESS</returncode><running>true</running></response>')
@@ -128,7 +128,7 @@ class BigBlueButtonApiControllerTest < ActionDispatch::IntegrationTest
 
   test 'isMeetingRunning responds with appropriate error on timeout' do
     server1 = Server.create(url: 'https://test-1.example.com/bigbluebutton/api', secret: 'test-1-secret', load: 0)
-    meeting1 = Meeting.find_or_create_with_server('Demo Meeting', server1)
+    meeting1 = Meeting.find_or_create_with_server('Demo Meeting', server1, 'mp')
 
     stub_request(:get, encode_bbb_uri('isMeetingRunning', server1.url, server1.secret, 'meetingID' => meeting1.id))
       .to_timeout
@@ -227,7 +227,8 @@ class BigBlueButtonApiControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal 'SUCCESS', response_xml.at_xpath('/response/returncode').text
     assert_equal 'noMeetings', response_xml.at_xpath('/response/messageKey').text
-    assert_equal 'No meetings were found on this server.', response_xml.at_xpath('/response/message').text
+    assert_equal 'no meetings were found on this server', response_xml.at_xpath('/response/message').text
+    assert_equal '', response_xml.at_xpath('/response/meetings').text
   end
 
   test 'getMeetings only makes a request to online servers' do
@@ -293,7 +294,7 @@ class BigBlueButtonApiControllerTest < ActionDispatch::IntegrationTest
                             secret: 'test-1-secret', enabled: true, load: 0)
 
     params = {
-      meetingID: 'test-meeting-1',
+      meetingID: 'test-meeting-1', moderatorPW: 'mp',
     }
 
     stub_request(:get, encode_bbb_uri('create', server1.url, server1.secret, params))
@@ -321,7 +322,7 @@ class BigBlueButtonApiControllerTest < ActionDispatch::IntegrationTest
                             secret: 'test-1-secret', enabled: true, load: 0)
 
     params = {
-      meetingID: 'test-meeting-1',
+      meetingID: 'test-meeting-1', moderatorPW: 'mp',
     }
 
     stub_request(:get, encode_bbb_uri('create', server1.url, server1.secret, params))
@@ -343,7 +344,7 @@ class BigBlueButtonApiControllerTest < ActionDispatch::IntegrationTest
                             secret: 'test-1-secret', enabled: true, load: 0, load_multiplier: 7.0)
 
     params = {
-      meetingID: 'test-meeting-1',
+      meetingID: 'test-meeting-1', moderatorPW: 'mp',
     }
 
     stub_request(:get, encode_bbb_uri('create', server1.url, server1.secret, params))
@@ -364,7 +365,7 @@ class BigBlueButtonApiControllerTest < ActionDispatch::IntegrationTest
                             secret: 'test-1-secret', enabled: true, load: 0)
 
     params = {
-      meetingID: 'test-meeting-1',
+      meetingID: 'test-meeting-1', moderatorPW: 'mp',
     }
 
     stub_request(:post, encode_bbb_uri('create', server1.url, server1.secret, params))
@@ -559,7 +560,7 @@ class BigBlueButtonApiControllerTest < ActionDispatch::IntegrationTest
   test 'end responds with sentEndMeetingRequest if meeting exists and password is correct' do
     server1 = Server.create(url: 'https://test-1.example.com/bigbluebutton/api/',
                             secret: 'test-1-secret', enabled: true, load: 0)
-    Meeting.find_or_create_with_server('test-meeting-1', server1)
+    Meeting.find_or_create_with_server('test-meeting-1', server1, 'mp')
 
     params = {
       meetingID: 'test-meeting-1',
@@ -587,7 +588,7 @@ class BigBlueButtonApiControllerTest < ActionDispatch::IntegrationTest
   test 'end returns error on timeout but still deletes meeting' do
     server1 = Server.create(url: 'https://test-1.example.com/bigbluebutton/api/',
                             secret: 'test-1-secret', enabled: true, load: 0)
-    Meeting.find_or_create_with_server('test-meeting-1', server1)
+    Meeting.find_or_create_with_server('test-meeting-1', server1, 'mp')
 
     params = {
       meetingID: 'test-meeting-1',
@@ -642,7 +643,7 @@ class BigBlueButtonApiControllerTest < ActionDispatch::IntegrationTest
   test 'join redirects user to the corrent join url' do
     server1 = Server.create(url: 'https://test-1.example.com/bigbluebutton/api/',
                             secret: 'test-1-secret', enabled: true, load: 0)
-    meeting = Meeting.find_or_create_with_server('test-meeting-1', server1)
+    meeting = Meeting.find_or_create_with_server('test-meeting-1', server1, 'mp')
 
     params = { meetingID: meeting.id, password: 'test-password', fullName: 'test-name' }
 
@@ -1041,51 +1042,55 @@ class BigBlueButtonApiControllerTest < ActionDispatch::IntegrationTest
   test 'getRecordings returns noRecordings if RECORDING_DISABLED flag is set to true' do
     create_list(:recording, 3)
     params = encode_bbb_params('getRecordings', '')
-    mock_env('RECORDING_DISABLED' => 'true') do
-      reload_routes!
-      get bigbluebutton_api_get_recordings_url, params: params
-    end
+    Rails.configuration.x.recording_disabled = true
+    reload_routes!
+    get bigbluebutton_api_get_recordings_url, params: params
     assert_response :success
     assert_select 'response>returncode', 'SUCCESS'
     assert_select 'response>messageKey', 'noRecordings'
     assert_select 'response>message', 'There are not recordings for the meetings'
+    Rails.configuration.x.recording_disabled = false
+    reload_routes!
   end
 
   test 'publishRecordings returns notFound if RECORDING_DISABLED flag is set to true' do
     params = encode_bbb_params('publishRecordings', { publish: 'true' }.to_query)
-    mock_env('RECORDING_DISABLED' => 'true') do
-      reload_routes!
-      get 'http://www.example.com/bigbluebutton/api/publishRecordings', params: params
-    end
+    Rails.configuration.x.recording_disabled = true
+    reload_routes!
+    get 'http://www.example.com/bigbluebutton/api/publishRecordings', params: params
     assert_response :success
     assert_select 'response>returncode', 'FAILED'
     assert_select 'response>messageKey', 'notFound'
     assert_select 'response>message', 'We could not find recordings'
+    Rails.configuration.x.recording_disabled = false
+    reload_routes!
   end
 
   test 'updateRecordings returns notFound if RECORDING_DISABLED flag is set to true' do
     params = encode_bbb_params('updateRecordings', '')
-    mock_env('RECORDING_DISABLED' => 'true') do
-      reload_routes!
-      get 'http://www.example.com/bigbluebutton/api/updateRecordings', params: params
-    end
+    Rails.configuration.x.recording_disabled = true
+    reload_routes!
+    get 'http://www.example.com/bigbluebutton/api/updateRecordings', params: params
     assert_response :success
     assert_select 'response>returncode', 'FAILED'
     assert_select 'response>messageKey', 'notFound'
     assert_select 'response>message', 'We could not find recordings'
+    Rails.configuration.x.recording_disabled = false
+    reload_routes!
   end
 
   test 'deleteRecordings returns notFound if RECORDING_DISABLED flag is set to TRUE' do
     r = create(:recording)
     params = encode_bbb_params('deleteRecordings', "recordID=#{r.record_id}")
-    mock_env('RECORDING_DISABLED' => 'true') do
-      reload_routes!
-      get 'http://www.example.com/bigbluebutton/api/deleteRecordings', params: params
-    end
+    Rails.configuration.x.recording_disabled = true
+    reload_routes!
+    get 'http://www.example.com/bigbluebutton/api/deleteRecordings', params: params
     assert_response :success
     assert_select 'response>returncode', 'FAILED'
     assert_select 'response>messageKey', 'notFound'
     assert_select 'response>message', 'We could not find recordings'
+    Rails.configuration.x.recording_disabled = false
+    reload_routes!
   end
 
   # get_meetings_api_disabled
@@ -1098,6 +1103,7 @@ class BigBlueButtonApiControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select 'response>returncode', 'SUCCESS'
     assert_select 'response>messageKey', 'noMeetings'
-    assert_select 'response>message', 'No meetings were found on this server.'
+    assert_select 'response>message', 'no meetings were found on this server'
+    assert_select 'response>meetings', ''
   end
 end
