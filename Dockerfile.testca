@@ -1,0 +1,20 @@
+FROM docker.io/alpine:3.13 AS base
+RUN apk add --no-cache \
+    ca-certificates \
+    openssl \
+    libpq \
+    libxml2 \
+    libxslt \
+    ruby \
+    ruby-bigdecimal \
+    ruby-bundler \
+    ruby-json \
+    tini \
+    tzdata \
+    shared-mime-info \
+    && chmod -R g=u /etc/ssl \
+    && chown -R 1000:0 /etc/ssl
+
+COPY abc.crt /usr/local/share/ca-certificates/my-custom-ca.crt
+
+USER 1000

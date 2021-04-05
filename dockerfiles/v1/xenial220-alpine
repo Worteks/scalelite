@@ -1,6 +1,6 @@
-FROM docker.io/alpine:3.13 AS alpine
+FROM alpine:3.13 AS alpine
 
-FROM docker.io/ubuntu:16.04 AS bbb-playback
+FROM ubuntu:16.04 AS bbb-playback
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install -y language-pack-en \
@@ -32,7 +32,6 @@ CMD [ "/etc/nginx/start", "-g", "daemon off;" ]
 
 FROM alpine AS base
 RUN apk add --no-cache \
-    ca-certificates \
     libpq \
     libxml2 \
     libxslt \
@@ -44,9 +43,7 @@ RUN apk add --no-cache \
     tzdata \
     shared-mime-info \
     && addgroup scalelite \
-    && adduser -h /srv/scalelite -G scalelite -D scalelite \
-    && chmod -R g=u /etc/ssl \
-    && chown -R 1000:0 /etc/ssl
+    && adduser -h /srv/scalelite -G scalelite -D scalelite
 WORKDIR /srv/scalelite
 
 FROM base as builder
@@ -65,10 +62,7 @@ RUN bundle config build.nokogiri --use-system-libraries \
     && rm -rf vendor/bundle/ruby/*/cache \
     && find vendor/bundle/ruby/*/gems/ \( -name '*.c' -o -name '*.o' \) -delete
 COPY --chown=scalelite:scalelite . ./
-RUN rm -rf nginx \
-    && mkdir ./tmp \
-    && chmod -R g=u ./tmp
-
+RUN rm -rf nginx
 
 FROM base AS application
 USER scalelite:scalelite

@@ -1,4 +1,4 @@
-FROM docker.io/alpine:3.11 AS base
+FROM docker.io/alpine:3.13 AS base
 RUN apk add --no-cache \
     ca-certificates \
     libpq \
@@ -10,6 +10,7 @@ RUN apk add --no-cache \
     ruby-json \
     tini \
     tzdata \
+    shared-mime-info \
     && addgroup scalelite \
     && adduser -h /srv/scalelite -G scalelite -D scalelite \
     && chmod -R g=u /etc/ssl \
