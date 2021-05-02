@@ -21,7 +21,7 @@ gem 'redis', '~> 4.1.3'
 gem 'redis-namespace', '~> 1.7.0'
 
 # Use postgresql as the database for Active Record
-gem 'pg'
+gem 'pg', '~> 1.2'
 
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', '>= 1.4.2', require: false
@@ -34,6 +34,8 @@ gem 'tabulo', '~> 2.3.0'
 
 # Used by recording watch task. Version limit is for compat with rails auto-reloader.
 gem 'listen', '>= 3.0.5', '< 3.2'
+
+gem 'jwt', '2.2.3'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
