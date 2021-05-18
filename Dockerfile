@@ -1,1 +1,1 @@
-./Dockerfile.full
+Dockerfile.full

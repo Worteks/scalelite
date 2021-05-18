@@ -1,4 +1,3 @@
 FROM application AS api
-ENV BUILD_NUMBER=v1.0.8
 EXPOSE 3000
 CMD [ "bin/start" ]
