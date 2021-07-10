@@ -155,6 +155,7 @@ These variables are used by the service startup scripts in the Docker images, bu
 * `SERVER_ID_IS_HOSTNAME`: If set to "true", then instead of generating random UUIDs as the server ID when adding a server Scalelite will use the hostname of the server as the id. Server hostnames will be checked for uniqueness. Defaults to "false".
 * `CREATE_EXCLUDE_PARAMS`: List of BBB server attributes that should not be modified by create API call. Should be in the format 'CREATE_EXCLUDE_PARAMS="param1,param2,param3"'.
 * `JOIN_EXCLUDE_PARAMS`: List of BBB server attributes that should not be modified by join API call. Should be in the format 'JOIN_EXCLUDE_PARAMS="param1,param2,param3"'.
+* `PREPARED_STATEMENT`: Enable/Disable Active Record prepared statements feature, can be disabled by setting the value as `false`. Defaults to `true`.
 
 ### Redis Connection (`config/redis_store.yml`)
 
@@ -307,6 +308,27 @@ After changing the server needs to be polled at least once to see the new load.
 When you add a server to the pool, it may take upwards of 60 seconds (default value for `INTERVAL` for the background server polling process) before Scalelite marks the server as `online`.
 You can run the above task to have it poll the server right away without waiting.
 
+### Add multiple servers through a config file
+
+```sh
+./bin/rake servers:addAll[file]
+```
+
+Adds all the servers defined in a YAML file passed as an argument. The file passed in should have the following format:
+
+```yaml
+servers:
+  - url: "bbb1.example.com"
+    secret: "1bdce5cbab581f3f20b199b970e53ae3c9d9df6392f79589bd58be020ed14535"
+  - url: "bbb2.example.com"
+    secret: "2bdce5cbab581f3f20b199b970e53ae3c9d9df6392f79589bd58be020ed14535"
+  - url: "bbb3.example.com"
+    secret: "3bdce5cbab581f3f20b199b970e53ae3c9d9df6392f79589bd58be020ed14535"
+```
+
+The command will print out each added server's `url` and `id` once it has been successfully added.
+Note that all servers are added in the disabled state; see "Enable a server" above to enable them.
+
 ### Check the status of the entire deployment
 
 ```sh
@@ -320,7 +342,6 @@ This will print a table displaying a list of all servers and some basic statisti
  bbb1.example.com  enabled   online        12     25                7      15
  bbb2.example.com  enabled   online         4     14                4       5
 ```
-
 
 ## Getting Help
 
